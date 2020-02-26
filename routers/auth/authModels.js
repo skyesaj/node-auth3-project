@@ -10,10 +10,13 @@ function add(user) {
         .first();
     });
 }
+function findBy(filter) {
+  return db("user")
+    .where(filter)
+    .first();
+}
 
 module.exports = {
-  //   findById,
-  //   find,
-  //   findBy,
+  findBy,
   add
 };

@@ -1,7 +1,8 @@
 const router = require("express").Router();
 const crypt = require("bcryptjs");
-
+const jwt = require("jsonwebtoken");
 const auth = require("./authModels");
+const { jwtSecret } = require("../../api/config/secrets");
 
 router.post("/register", (req, res) => {
   const userData = req.body;
@@ -20,5 +21,38 @@ router.post("/register", (req, res) => {
     res.status(400).json({ error: " missing" });
   }
 });
+
+router.post("/login", (req, res) => {
+  const userData = req.body;
+
+  if (userData.username && userData.password) {
+    auth
+      .findBy({ username: userData.username })
+      .then(user => {
+        if (user && crypt.compareSync(userData.password, user.password)) {
+          const token = signToken(user);
+          res.status(200).json({ token });
+        }
+      })
+      .catch(error => {
+        res.status(400).json({ error: "invalid user" });
+      });
+  } else {
+    res.status(400).json({ error: " missing required" });
+  }
+});
+
+function signToken(user) {
+  const payload = {
+    userId: user.id,
+    username: user.username,
+    user_department: user.department
+  };
+
+  const options = {
+    expiresIn: "5hrs"
+  };
+  return jwt.sign(payload, jwtSecret, options);
+}
 
 module.exports = router;
